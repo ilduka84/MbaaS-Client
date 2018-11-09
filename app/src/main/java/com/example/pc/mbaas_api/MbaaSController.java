@@ -38,12 +38,21 @@ public class MbaaSController {
             }
         };
         handler.postDelayed(runnable,20000);
-        return;
+
+    }
+
+    public String toJson(Object object)
+    {
+        return serializator.to(object);
+    }
+
+    public <ObjectType>ObjectType fromJson(String json, Class<ObjectType> type)
+    {
+        return serializator.from(json, type);
     }
 
     public String login(String user, String password) {
-        JSONArray token=null;
-
+        JSONArray token;
         try {
             token = server.login(user,password);
             this.token = (String)token.get(0);
@@ -54,8 +63,8 @@ public class MbaaSController {
     }
 
     public void put(String json) throws Exception {
-        Long idServer = null;
-        Long idClient = null;
+        Long idServer;
+        Long idClient;
         ActionType action = new ActionType();
         action.setPut(true);
         idClient = client.put(json);
@@ -65,7 +74,7 @@ public class MbaaSController {
             return;
         }
         try {
-            idServer = new Long(server.put(this.token, json));
+            idServer = Long.valueOf(server.put(this.token, json));
             log.add(new Log(idServer, action));
             client.update(idClient, idServer);
         } catch (Exception e) {
@@ -108,7 +117,7 @@ public class MbaaSController {
         if(client.isToBeDelete(idClient)) return;
         try {
             server.update(idServer.intValue(), json, this.token);
-            log.add(new Log(new Long(idServer),action));
+            log.add(new Log(idServer,action));
         }catch (Exception e){
             e.printStackTrace();
             client.setToBeUpdate(idClient);
@@ -129,16 +138,16 @@ public class MbaaSController {
         Long idServer = client.getIdServerFromId(idClient);
         try{
             server.delete(idServer.intValue(), this.token);
-            log.add(new Log(new Long(idServer),action));
+            log.add(new Log(idServer,action));
             client.delete(idClient);
-            log.add(new Log(new Long(idClient),action));
+            log.add(new Log(idClient,action));
         }catch (Exception e){
             e.printStackTrace();
             client.setToBeDelete(idClient);
         }
     }
 
-    public void sync() throws Exception {
+    private void sync() throws Exception {
         this.insertSync();
         this.updateSync();
         this.deleteSync();
@@ -155,7 +164,7 @@ public class MbaaSController {
             for(int i=0;i<jsonArray.length();i++){
                 idClient = Long.parseLong(jsonArray.getJSONArray(i).get(0).toString());
                 int idServer = server.put(jsonArray.getJSONArray(i).get(1).toString(), this.token);
-                client.update(idClient,new Long( idServer));
+                client.update(idClient,Long.valueOf(idServer));
                 client.setToBeNotInsert(idClient);
             }
         } catch (Exception e) {
@@ -172,7 +181,7 @@ public class MbaaSController {
                 idClient = Long.parseLong(jsonArray.getJSONArray(i).get(0).toString());
                 int idServer = client.getIdServerFromId(idClient).intValue();
                 server.update(idServer,jsonArray.getJSONArray(i).get(1).toString(), this.token);
-                client.update(idClient,new Long( idServer));
+                client.update(idClient,Long.valueOf( idServer));
                 client.setToBeNotUpdate(idClient);
             }
         } catch (Exception e) {
