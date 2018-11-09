@@ -62,7 +62,7 @@ public class MbaaSController {
         return this.token;
     }
 
-    public void put(String json) throws Exception {
+    public Long put(String json) throws Exception {
         Long idServer;
         Long idClient;
         ActionType action = new ActionType();
@@ -71,7 +71,7 @@ public class MbaaSController {
         log.add(new Log(idClient,action));
         if (this.token == null) {
             client.setToBeInsert(idClient);
-            return;
+            return idClient;
         }
         try {
             idServer = Long.valueOf(server.put(this.token, json));
@@ -81,6 +81,7 @@ public class MbaaSController {
             e.printStackTrace();
             client.setToBeInsert(idClient);
         }
+        return idClient;
     }
 
     public String getFromClient(String root){
